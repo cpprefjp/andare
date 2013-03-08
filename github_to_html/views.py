@@ -31,11 +31,11 @@ class JSONResponseMixin(object):
 class GithubToHtmlMixin(object):
     def get_context_data(self, paths, **kwargs):
         paths = paths.strip('/').split('/')
-        html = models.get_html_from_path(paths)
+        content = models.get_html_content_by_path(paths)
         # ignore kwargs
         context = {
-            'title': paths[-1],
-            'html': html
+            'title': content['title'],
+            'html': content['html']
         }
         return context
 

@@ -32,8 +32,11 @@ def _get_file_from_path(paths):
     blob = gh.git_data.blobs.get(sha)
     return blob.content.decode(encoding=blob.encoding)
 
-def get_html_from_path(paths):
-    return _md_to_html(_get_file_from_path(paths))
+def get_html_content_by_path(paths):
+    return {
+        'title': paths[-1].split('.')[0],
+        'html': _md_to_html(_get_file_from_path(paths)),
+    }
 
 
 
@@ -62,6 +65,9 @@ def _diff_to_contents(diff_type_list):
         }
         return lookup[command]
 
+    def to_name(path):
+        return path.split('.')[0]
+
     for dt in diff_type_list:
         paths = dt.path.split('/')
         dic = contents
@@ -70,12 +76,14 @@ def _diff_to_contents(diff_type_list):
                 dic[path] = {
                     "type": "directory",
                     "command": "nothing", #TODO
+                    "name": to_name(path),
                     "children": { },
                 }
             dic = dic[path]["children"]
         dic[paths[-1]] = {
             "type": "file",
             "command": to_longname(dt.command),
+            "name": to_name(paths[-1]),
             "path": dt.path,
         }
 
@@ -86,38 +94,42 @@ def get_update_contents():
     origin/master との差分を調べて、どのファイルを更新すればいいのかを返す
 
     $ git diff --name-status master origin/master
-    M	file1
-    A	file2
-    M	dir1/file2
-    D	dir1/file3
+    M	file1.md
+    A	file2.md
+    M	dir1/file2.md
+    D	dir1/file3.md
 
     このデータから、こんな感じのデータを生成する。
 
     {
-      "file1": {
+      "file1.md": {
         "type": "file",
         "command": "update",
-        "path": "file1"
+        "name": "file1",
+        "path": "file1.md"
       },
-      "file2": {
+      "file2.md": {
         "type": "file",
         "command": "append",
         "name": "file2"
-        "path": "file2"
+        "path": "file2.md"
       },
       "dir1": {
         "type": "directory",
         "command": "nothing",
+        "name": "dir1",
         "children": {
-          "file2": {
+          "file2.md": {
             "type": "file",
             "command": "update",
-            "path": "dir1/file2"
+            "name": "file2"
+            "path": "dir1/file2.md"
           },
-          "file3": {
+          "file3.md": {
             "type": "file",
             "command": "delete",
-            "path": "dir1/file3"
+            "name": "file3"
+            "path": "dir1/file3.md"
           }
         }
       }
