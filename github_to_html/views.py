@@ -27,12 +27,19 @@ class JSONResponseMixin(object):
         # -- can be serialized as JSON.
         return json.dumps(context)
 
-class GithubToHtmlView(JSONResponseMixin, TemplateView):
+class GithubToHtmlMixin(object):
     def get_context_data(self, paths, **kwargs):
         paths = paths.strip('/').split('/')
         html = models.get_html_from_path(paths)
         # ignore kwargs
         context = {
+            'title': paths[-1],
             'html': html
         }
         return context
+
+class JSONGithubToHtmlView(JSONResponseMixin, GithubToHtmlMixin, TemplateView):
+    pass
+
+class HtmlGithubToHtmlView(GithubToHtmlMixin, TemplateView):
+    template_name = 'github_to_html/github_to_html.html'

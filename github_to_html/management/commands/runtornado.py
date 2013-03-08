@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 class Command(BaseCommand):
     def handle(self, port='', *args, **options):
+        host = 'localhost'
         if port == '':
             port = '8080'
 
@@ -17,10 +18,10 @@ class Command(BaseCommand):
         print "Validating models..."
         self.validate(display_num_errors=True)
         print "\nDjango version %s, using settings %r" % (django.get_version(), settings.SETTINGS_MODULE)
-        print "Server is running at http://%s:%s/" % ('*', port)
+        print "Server is running at http://%s:%s/" % (host, port)
 
         application = get_wsgi_application()
         container = wsgi.WSGIContainer(application)
         http_server = httpserver.HTTPServer(container)
-        http_server.listen(int(port), address='*')
+        http_server.listen(int(port), address=host)
         ioloop.IOLoop.instance().start()
