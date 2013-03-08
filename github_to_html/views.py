@@ -1,6 +1,7 @@
+#coding: utf-8
+import json
 from django.views.generic.base import TemplateView
 from django.http import HttpResponse
-import json
 from github_to_html import models
 
 class JSONResponseMixin(object):
@@ -43,3 +44,12 @@ class JSONGithubToHtmlView(JSONResponseMixin, GithubToHtmlMixin, TemplateView):
 
 class HtmlGithubToHtmlView(GithubToHtmlMixin, TemplateView):
     template_name = 'github_to_html/github_to_html.html'
+
+class ContentsView(JSONResponseMixin, TemplateView):
+    def get_context_data(self, **kwargs):
+        contents = models.get_update_contents()
+
+        context = {
+            "contents": contents
+        }
+        return context
