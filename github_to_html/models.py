@@ -5,14 +5,10 @@ import subprocess
 import requests
 from pygithub3 import Github
 from pygithub3.core.client import Client
+import markdown
 
 def _md_to_html(md):
-    data = { 'text': md, 'mode': 'markdown' }
-
-    client = Client()
-    url = "%s%s" % (client.config['base_url'], 'markdown')
-    response = requests.post(url, data=json.dumps(data))
-    return response.content
+    return markdown.markdown(unicode(md, encoding='utf-8'), ['fenced_code', 'codehilite(noclasses=True)'])
 
 def _get_tree_by_path(trees, sha, path):
     result = trees.get(sha)
