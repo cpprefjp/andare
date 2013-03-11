@@ -44,7 +44,8 @@ def _git_diff():
 
     # ひとまず毎回固定値で
     lines = ['M	fetch_add.md',
-             'M	advance.md']
+             'M	advance.md',
+             'M	atomic.md']
     #lines = ['M	file1',
     #         'A	file2',
     #         'M	dir1/file2',
