@@ -24,8 +24,8 @@ github でのコードブロック記法が使える。
     ... y = sorted(x)
     ... x.sort()
     ... ```
-    ... sorted[color: ff0000]
-    ... sort[link: http://example.com/]
+    ... sorted[color ff0000]
+    ... sort[link http://example.com/]
     ... '''
     >>> print markdown.markdown(text, extensions=['qualified_fenced_code'])
 """
@@ -65,8 +65,8 @@ def multiple_replace(text,adict):
         return adict[match.group(0)]
     return rx.sub(one_xlat, text)
 
-QUALIFY_RE = re.compile(r'^(?P<target>.*?)(?P<commands>(\<.*?\>)*)$')
-QUALIFY_COMMAND_RE = re.compile(r'\<(.*?)\>')
+QUALIFY_RE = re.compile(r'^\* +(?P<target>.*?)(?P<commands>(\[.*?\])*)$')
+QUALIFY_COMMAND_RE = re.compile(r'\[(.*?)\]')
 
 def _make_random_string():
     import string
@@ -74,13 +74,17 @@ def _make_random_string():
     alphabets = string.ascii_letters
     return ''.join(alphabets[randrange(len(alphabets))] for i in xrange(32))
 
+def _base64(s):
+    return s.encode('base64').replace('\n', '').replace('=', '_')
+
 class Qualifier(object):
     def __init__(self, line):
         # parsing
         m = QUALIFY_RE.search(line)
         if m:
+            print m.group('target')
             self._target_re = re.compile('(?<=[^a-zA-Z_]){target}(?=[^a-zA-Z_])'.format(
-                target=m.group('target')
+                target=re.escape(m.group('target')),
             ))
             self._commands = { }
             def f(match):
@@ -93,7 +97,7 @@ class Qualifier(object):
             for name,command in self._commands.iteritems():
                 text = '%(unique_id)s %(command)s %(original)s %(unique_id)s' % {
                     'unique_id': name,
-                    'command': command.encode('base64').replace('=', '_'),
+                    'command': _base64(command),
                     'original': text,
                 }
             return text
@@ -116,7 +120,7 @@ class Qualifier(object):
         for name,command in self._commands.iteritems():
             marked_re = re.compile('%(unique_id)s %(command)s (?P<original>.*?)( %(unique_id)s)' % {
                 'unique_id': re.escape(name),
-                'command': re.escape(command.encode('base64').replace('=', '_')),
+                'command': re.escape(_base64(command)),
             })
             def replace(match):
                 xs = command.split(' ')
