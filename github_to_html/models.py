@@ -8,7 +8,7 @@ from pygithub3.core.client import Client
 import markdown
 
 def _md_to_html(md):
-    return markdown.markdown(unicode(md, encoding='utf-8'), ['fenced_code', 'codehilite(noclasses=True)'])
+    return markdown.markdown(unicode(md, encoding='utf-8'), ['tables', 'github_to_html.qualified_fenced_code', 'codehilite(noclasses=True)'])
 
 def _get_tree_by_path(trees, sha, path):
     result = trees.get(sha)
