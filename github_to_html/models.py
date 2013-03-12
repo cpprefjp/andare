@@ -7,8 +7,17 @@ from pygithub3 import Github
 from pygithub3.core.client import Client
 import markdown
 
-def _md_to_html(md):
-    return markdown.markdown(unicode(md, encoding='utf-8'), ['tables', 'github_to_html.qualified_fenced_code', 'codehilite(noclasses=True)'])
+BASE_URL = 'https://sites.google.com/site/cpprefjpdummy'
+
+def _md_to_html(md, paths):
+    ext = 'github_to_html.qualified_fenced_code(base_url={base_url}, base_path={base_path}'.format(
+        base_url=BASE_URL,
+        base_path='/'.join(paths),
+    )
+    return markdown.markdown(unicode(md, encoding='utf-8'), [
+        'tables',
+        ext,
+        'codehilite(noclasses=True)'])
 
 def _get_tree_by_path(trees, sha, path):
     result = trees.get(sha)
@@ -31,7 +40,7 @@ def _get_file_from_path(paths):
 def get_html_content_by_path(paths):
     return {
         'title': paths[-1].split('.')[0],
-        'html': _md_to_html(_get_file_from_path(paths)),
+        'html': _md_to_html(_get_file_from_path(paths), paths),
     }
 
 
