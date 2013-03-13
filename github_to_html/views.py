@@ -1,7 +1,7 @@
 #coding: utf-8
 import json
-from django.views.generic.base import TemplateView
-from django.http import HttpResponse
+from django.views.generic.base import View, TemplateView
+from django.http import HttpResponse, HttpResponseRedirect
 from github_to_html import models
 
 class JSONResponseMixin(object):
@@ -53,3 +53,11 @@ class ContentsView(JSONResponseMixin, TemplateView):
             "contents": contents
         }
         return context
+
+class OAuthView(View):
+    # GET https://github.com/login/oauth/authorize?client_id=5163f9957aabe66d2ce4
+    def get(self, request):
+        code = request.GET.get('code')
+        models.set_access_token(code)
+
+        return HttpResponseRedirect('https://github.com/cpprefjp/site')
