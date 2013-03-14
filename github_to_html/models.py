@@ -18,7 +18,8 @@ def _md_to_html(md, paths):
     return markdown.markdown(unicode(md, encoding='utf-8'), [
         'tables',
         ext,
-        'codehilite(noclasses=True)'])
+        'codehilite(noclasses=True)',
+        'github_to_html.html_attribute'])
 
 def _get_tree_by_path(trees, sha, path):
     result = trees.get(sha)
