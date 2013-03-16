@@ -3,6 +3,7 @@ import json
 from collections import namedtuple
 import re
 import subprocess
+from django.conf import settings
 import requests
 from pygithub3 import Github
 from pygithub3.core.client import Client
@@ -51,71 +52,12 @@ def get_html_content_by_path(paths):
 DiffType = namedtuple('DiffType', ['command', 'path'])
 
 def _git_diff():
-    #こんな感じで差分が出せるはず。
-    #subprocess.check_output(['git', 'diff', '--name-status', 'master', 'origin/master], cwd=...)
+    output = subprocess.check_output(['git', 'diff', '--name-status', settings.GIT_LOCAL_BRANCH, settings.GIT_REMOTE_BRANCH], cwd=settings.GIT_DIR)
+    output = output.strip()
+    if len(output) == 0:
+        return []
 
-    # ひとまず毎回固定値で
-    lines = ['M	README.md',
-             'M	reference/atomic.md',
-             'M	reference/atomic/atomic_flag_test_and_set_explicit.md',
-             'M	reference/atomic/atomic_var_init.md',
-             'M	reference/atomic/atomic_fetch_add_explicit.md',
-             'M	reference/atomic/atomic.md',
-             'M	reference/atomic/atomic_fetch_and_explicit.md',
-             'M	reference/atomic/atomic_is_lock_free.md',
-             'M	reference/atomic/atomic_load.md',
-             'M	reference/atomic/atomic_thread_fence.md',
-             'M	reference/atomic/atomic_fetch_sub.md',
-             'M	reference/atomic/atomic_flag.md',
-             'M	reference/atomic/atomic_flag/atomic_flag.md',
-             'M	reference/atomic/atomic_flag/clear.md',
-             'M	reference/atomic/atomic_flag/test_and_set.md',
-             'M	reference/atomic/atomic_flag_clear_explicit.md',
-             'M	reference/atomic/kill_dependency.md',
-             'M	reference/atomic/atomic_store_explicit.md',
-             'M	reference/atomic/atomic_fetch_xor_explicit.md',
-             'M	reference/atomic/memory_order.md',
-             'M	reference/atomic/lock_free_property.md',
-             'M	reference/atomic/atomic_compare_exchange_strong.md',
-             'M	reference/atomic/atomic_exchange.md',
-             'M	reference/atomic/atomic_init.md',
-             'M	reference/atomic/atomic_fetch_or.md',
-             'M	reference/atomic/atomic_store.md',
-             'M	reference/atomic/atomic_exchange_explicit.md',
-             'M	reference/atomic/atomic_fetch_and.md',
-             'M	reference/atomic/atomic_signal_fence.md',
-             'M	reference/atomic/atomic/atomic.md',
-             'M	reference/atomic/atomic/fetch_add.md',
-             'M	reference/atomic/atomic/op_xor_assign.md',
-             'M	reference/atomic/atomic/op_minus_assign.md',
-             'M	reference/atomic/atomic/fetch_xor.md',
-             'M	reference/atomic/atomic/compare_exchange_weak.md',
-             'M	reference/atomic/atomic/fetch_sub.md',
-             'M	reference/atomic/atomic/exchange.md',
-             'M	reference/atomic/atomic/op_decrement.md',
-             'M	reference/atomic/atomic/fetch_and.md',
-             'M	reference/atomic/atomic/op_t.md',
-             'M	reference/atomic/atomic/op_or_assign.md',
-             'M	reference/atomic/atomic/is_lock_free.md',
-             'M	reference/atomic/atomic/compare_exchange_strong.md',
-             'M	reference/atomic/atomic/op_plus_assign.md',
-             'M	reference/atomic/atomic/op_increment.md',
-             'M	reference/atomic/atomic/op_assign.md',
-             'M	reference/atomic/atomic/op_and_assign.md',
-             'M	reference/atomic/atomic/load.md',
-             'M	reference/atomic/atomic/store.md',
-             'M	reference/atomic/atomic/fetch_or.md',
-             'M	reference/atomic/atomic_fetch_xor.md',
-             'M	reference/atomic/atomic_fetch_or_explicit.md',
-             'M	reference/atomic/atomic_compare_exchange_weak.md',
-             'M	reference/atomic/atomic_fetch_add.md',
-             'M	reference/atomic/atomic_flag_test_and_set.md',
-             'M	reference/atomic/atomic_flag_clear.md',
-             'M	reference/atomic/atomic_compare_exchange_strong_explicit.md',
-             'M	reference/atomic/atomic_load_explicit.md',
-             'M	reference/atomic/atomic_flag_init.md',
-             'M	reference/atomic/atomic_fetch_sub_explicit.md',
-             'M	reference/atomic/atomic_compare_exchange_weak_explicit.md']
+    lines = output.split('\n')
     return [DiffType(*t.split('\t')) for t in lines]
 
 def _diff_to_contents(diff_type_list):
@@ -136,7 +78,7 @@ def _diff_to_contents(diff_type_list):
         # 更新対象でないファイルは無視する
         if re.match('^([A-Z].*)|(.*!(\.md))$', paths[-1]):
             continue
-            
+
         dic = contents
         for path in paths[:-1]:
             if path not in dic:
@@ -210,6 +152,12 @@ def get_update_contents():
     }
     """
     return _diff_to_contents(_git_diff())
+
+def git_fetch():
+    subprocess.check_output(['git', 'fetch', GIT_REMOTE], cwd=settings.GIT_DIR)
+
+def git_merge():
+    subprocess.check_output(['git', 'merge', GIT_REMOTE_BRANCH], cwd=settings.GIT_DIR)
 
 def set_access_token(code):
     headers = {'Accept': 'application/json'}
