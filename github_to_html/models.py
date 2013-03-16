@@ -154,10 +154,10 @@ def get_update_contents():
     return _diff_to_contents(_git_diff())
 
 def git_fetch():
-    subprocess.check_output(['git', 'fetch', GIT_REMOTE], cwd=settings.GIT_DIR)
+    subprocess.check_output(['git', 'fetch', settings.GIT_REMOTE], cwd=settings.GIT_DIR)
 
 def git_merge():
-    subprocess.check_output(['git', 'merge', GIT_REMOTE_BRANCH], cwd=settings.GIT_DIR)
+    subprocess.check_output(['git', 'merge', settings.GIT_REMOTE_BRANCH], cwd=settings.GIT_DIR)
 
 def set_access_token(code):
     headers = {'Accept': 'application/json'}
