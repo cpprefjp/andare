@@ -160,7 +160,7 @@ LOGGING = {
     }
 }
 
-GIT_DIR = os.path.join(PROJECT_DIR, '..', 'cpprefjp/site')
+GIT_DIR = os.path.join(PROJECT_DIR, '..', 'cpprefjp', 'site')
 GIT_REMOTE = 'origin'
 GIT_REMOTE_BRANCH = 'origin/master'
 GIT_LOCAL_BRANCH = 'master'

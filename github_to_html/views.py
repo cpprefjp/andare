@@ -56,28 +56,30 @@ class ContentsView(JSONResponseMixin, TemplateView):
 
 class StartView(JSONResponseMixin, View):
     def get_context_data(self, **kwargs):
-        contents = models.git_fetch()
-
         context = {
             "success": True,
         }
+        context.update(kwargs)
         return context
 
     def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
+        message = models.git_fetch()
+        print message
+        context = self.get_context_data(message=message)
         return self.render_to_response(context)
 
 class CommitView(JSONResponseMixin, View):
     def get_context_data(self, **kwargs):
-        contents = models.git_merge()
-
         context = {
             "success": True,
         }
+        context.update(kwargs)
         return context
 
     def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
+        message = models.git_merge()
+        print message
+        context = self.get_context_data(message=message)
         return self.render_to_response(context)
 
 class OAuthView(View):
