@@ -74,12 +74,64 @@ def _make_random_string():
     alphabets = string.ascii_letters
     return ''.join(alphabets[randrange(len(alphabets))] for i in xrange(32))
 
+class QualifyDictionary(object):
+    def __init__(self, base_url, base_paths):
+        # 各コマンドに対する実際の処理
+        def _qualify_italic(*xs):
+            return '<i>{0}</i>'.format(*xs)
+        def _qualify_color(*xs):
+            return '<span style="color:#{1}">{0}</span>'.format(*xs)
+        def _qualify_link(*xs):
+            text = xs[0]
+            url = xs[1]
+            attr = ''
+            if url.startswith('http://') or url.startswith('https://'):
+                # 絶対パス
+                base_url_body = base_url.split('//', 2)[1]
+                url_body = url.split('//', 2)[1]
+                # 別ドメインの場合は別タブで開く
+                if not url_body.startswith(base_url_body):
+                    attr = 'target="_blank"'
+            elif url.startswith('/'):
+                # サイト内絶対パス
+                url = base_url + url
+            else:
+                # サイト内相対パス
+                paths = base_paths
+                for p in url.split('/'):
+                    if p == '':
+                        continue
+                    elif p == '.':
+                        continue
+                    elif p == '..':
+                        paths = paths[:-1]
+                    else:
+                        paths.append(p)
+                url = base_url + '/' + '/'.join(paths)
+            return '<a href="{url}" {attr}>{text}</a>'.format(
+                url=url,
+                attr=attr,
+                text=text
+            )
+
+        self.qualify_dic = {
+            'italic': _qualify_italic,
+            'color': _qualify_color,
+            'link': _qualify_link,
+        }
+
 class Qualifier(object):
     """修飾１個分のデータを保持するクラス
     """
-    def __init__(self, line):
+    def __init__(self, line, qdic):
+        command_res = [r'(\[{cmd}(\]|.*?\]))'.format(cmd=cmd) for cmd in qdic.qualify_dic]
+
+        qualify_re_str = r'^\* +(?P<target>.*?)(?P<commands>({commands})+)$'.format(
+                            commands='|'.join(command_res))
+        qualify_re = re.compile(qualify_re_str)
+
         # parsing
-        m = QUALIFY_RE.search(line)
+        m = qualify_re.search(line)
         if not m:
             raise ValueError, 'Failed parse'
         self.target = m.group('target')
@@ -90,16 +142,15 @@ class Qualifier(object):
 
 class QualifierList(object):
     def __init__(self, lines, base_url, base_path):
-        self._base_url = base_url
-        self._base_paths = base_path.strip('/').split('/')
+        self._qdic = QualifyDictionary(base_url, base_path.strip('/').split('/'))
 
         # Qualifier を作るが、エラーになったデータは取り除く
-        def ignore(f, v):
+        def ignore(f, *args, **kwargs):
             try:
-                return f(v)
+                return f(*args, **kwargs)
             except:
                 return None
-        self._qs = filter(None, [ignore(Qualifier, v) for v in lines])
+        self._qs = filter(None, [ignore(Qualifier, v, self._qdic) for v in lines])
 
 
     def mark(self, code):
@@ -114,7 +165,7 @@ class QualifierList(object):
 
         # 置換対象になる単語を正規表現で表す
         def get_target_re(target):
-            return '(?<=[^a-zA-Z_]){target}(?=[^a-zA-Z_])'.format(
+            return '((?<=[^a-zA-Z_])|(^)){target}((?=[^a-zA-Z_])|($))'.format(
                 target=re.escape(target)
             )
         target_re_text = '|'.join('({})'.format(get_target_re(q.target)) for q in self._qs)
@@ -150,52 +201,12 @@ class QualifierList(object):
         return code
 
     def qualify(self, html):
+        # 修飾の指定がなかった
         if len(self._qs) == 0:
             return html
-
-        # 各コマンドに対する実際の処理
-        def _qualify_italic(*xs):
-            return '<i>{0}</i>'.format(*xs)
-        def _qualify_color(*xs):
-            return '<span style="color:#{1}">{0}</span>'.format(*xs)
-        def _qualify_link(*xs):
-            text = xs[0]
-            url = xs[1]
-            attr = ''
-            if url.startswith('http://') or url.startswith('https://'):
-                # 絶対パス
-                base_url_body = self._base_url.split('//', 2)[1]
-                url_body = url.split('//', 2)[1]
-                # 別ドメインの場合は別タブで開く
-                if not url_body.startswith(base_url_body):
-                    attr = 'target="_blank"'
-            elif url.startswith('/'):
-                # サイト内絶対パス
-                url = self._base_url + url
-            else:
-                # サイト内相対パス
-                paths = self._base_paths
-                for p in url.split('/'):
-                    if p == '':
-                        continue
-                    elif p == '.':
-                        continue
-                    elif p == '..':
-                        paths = paths[:-1]
-                    else:
-                        paths.append(p)
-                url = self._base_url + '/' + '/'.join(paths)
-            return '<a href="{url}" {attr}>{text}</a>'.format(
-                url=url,
-                attr=attr,
-                text=text
-            )
-
-        qualify_dic = {
-            'italic': _qualify_italic,
-            'color': _qualify_color,
-            'link': _qualify_link,
-        }
+        # 修飾の指定はあったが、検索してみると修飾する文字列が見つからなかった
+        if len(self._code_re.pattern) == 0:
+            return html
 
         # マークされた文字列を探しだして、そのマークに対応した修飾を行う
         def convert(match):
@@ -206,7 +217,7 @@ class QualifierList(object):
                 c = xs[0]
                 remain = xs[1:]
                 # 修飾
-                text = qualify_dic[c](text, *remain)
+                text = self._qdic.qualify_dic[c](text, *remain)
             return text
         return self._code_re.sub(convert, html)
 
