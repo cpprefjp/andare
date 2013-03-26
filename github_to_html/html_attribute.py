@@ -31,6 +31,11 @@ class AttributePostprocessor(postprocessors.Postprocessor):
             element.attrib['bordercolor'] = '#888'
             element.attrib['style'] = 'border-collapse:collapse'
 
+    def _remove_md(self, url):
+        # サイト内絶対パスで末尾に .md があった場合、取り除く
+        # （github のプレビューとの互換性のため）
+        return url.rstrip('.md')
+
     def _to_absolute_url(self, element):
         if element.tag == 'a':
             base_url = self.config['base_url'].strip('/')
@@ -47,6 +52,7 @@ class AttributePostprocessor(postprocessors.Postprocessor):
             elif url.startswith('/'):
                 # サイト内絶対パス
                 element.attrib['href'] = base_url + url
+                element.attrib['href'] = self._remove_md(element.attrib['href'])
             else:
                 # サイト内相対パス
                 paths = base_paths
@@ -60,6 +66,7 @@ class AttributePostprocessor(postprocessors.Postprocessor):
                     else:
                         paths.append(p)
                 element.attrib['href'] = base_url + '/' + '/'.join(paths)
+                element.attrib['href'] = self._remove_md(element.attrib['href'])
 
     def run(self, text):
         text = '<{tag}>{text}</{tag}>'.format(tag=self._markdown.doc_tag, text=text)
