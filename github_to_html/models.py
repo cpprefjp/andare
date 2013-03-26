@@ -11,16 +11,20 @@ import markdown
 
 BASE_URL = 'https://sites.google.com/site/cpprefjpdummy'
 
-def _md_to_html(md, paths):
-    ext = 'github_to_html.qualified_fenced_code(base_url={base_url}, base_path={base_path}'.format(
+def _md_to_html(md_data, paths):
+    qualified_fenced_code = 'github_to_html.qualified_fenced_code'
+    html_attribute = 'github_to_html.html_attribute(base_url={base_url}, base_path={base_path}'.format(
         base_url=BASE_URL,
         base_path='/'.join(paths),
     )
-    return markdown.markdown(unicode(md, encoding='utf-8'), [
+
+    md = markdown.Markdown([
         'tables',
-        ext,
+        qualified_fenced_code,
         'codehilite(noclasses=True)',
-        'github_to_html.html_attribute'])
+        html_attribute])
+    md.safeMode = 'escape'
+    return md.convert(unicode(md_data, encoding='utf-8'))
 
 def _get_tree_by_path(trees, sha, path):
     result = trees.get(sha)

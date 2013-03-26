@@ -46,21 +46,8 @@ QUALIFY_COMMAND_RE = re.compile(r'\[(.*?)\]')
 
 
 class QualifiedFencedCodeExtension(Extension):
-
-    def __init__(self, configs):
-        # デフォルトの設定
-        self.config = {
-            'base_url' : [None, "Base URL used to link URL as absolute URL"],
-            'base_path' : [None, "Base Path used to link URL as relative URL"],
-        }
-
-        # ユーザ設定で上書き
-        for key, value in configs:
-            self.setConfig(key, value)
-
     def extendMarkdown(self, md, md_globals):
         fenced_block = QualifiedFencedBlockPreprocessor(md)
-        fenced_block.config = self.getConfigs()
         md.registerExtension(self)
 
         md.preprocessors.add('qualified_fenced_code', fenced_block, "_begin")
@@ -75,7 +62,7 @@ def _make_random_string():
     return ''.join(alphabets[randrange(len(alphabets))] for i in xrange(32))
 
 class QualifyDictionary(object):
-    def __init__(self, base_url, base_paths):
+    def __init__(self):
         # 各コマンドに対する実際の処理
         def _qualify_italic(*xs):
             return '<i>{0}</i>'.format(*xs)
@@ -84,35 +71,7 @@ class QualifyDictionary(object):
         def _qualify_link(*xs):
             text = xs[0]
             url = xs[1]
-            attr = ''
-            if url.startswith('http://') or url.startswith('https://'):
-                # 絶対パス
-                base_url_body = base_url.split('//', 2)[1]
-                url_body = url.split('//', 2)[1]
-                # 別ドメインの場合は別タブで開く
-                if not url_body.startswith(base_url_body):
-                    attr = 'target="_blank"'
-            elif url.startswith('/'):
-                # サイト内絶対パス
-                url = base_url + url
-            else:
-                # サイト内相対パス
-                paths = base_paths
-                for p in url.split('/'):
-                    if p == '':
-                        continue
-                    elif p == '.':
-                        continue
-                    elif p == '..':
-                        paths = paths[:-1]
-                    else:
-                        paths.append(p)
-                url = base_url + '/' + '/'.join(paths)
-            return '<a href="{url}" {attr}>{text}</a>'.format(
-                url=url,
-                attr=attr,
-                text=text
-            )
+            return '<a href="{1}">{0}</a>'.format(*xs)
 
         self.qualify_dic = {
             'italic': _qualify_italic,
@@ -141,8 +100,8 @@ class Qualifier(object):
         QUALIFY_COMMAND_RE.sub(f, m.group('commands'))
 
 class QualifierList(object):
-    def __init__(self, lines, base_url, base_path):
-        self._qdic = QualifyDictionary(base_url, base_path.strip('/').split('/'))
+    def __init__(self, lines):
+        self._qdic = QualifyDictionary()
 
         # Qualifier を作るが、エラーになったデータは取り除く
         def ignore(f, *args, **kwargs):
@@ -246,10 +205,7 @@ class QualifiedFencedBlockPreprocessor(Preprocessor):
                 qualifies = m.group('qualifies') or ''
                 qualifies = filter(None, qualifies.split('\n'))
                 code = m.group('code')
-                qualifier_list = QualifierList(
-                    qualifies,
-                    self.config['base_url'],
-                    self.config['base_path'])
+                qualifier_list = QualifierList(qualifies)
                 code = qualifier_list.mark(code)
 
                 # If config is not empty, then the codehighlite extension
