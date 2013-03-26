@@ -41,12 +41,51 @@ def _get_file_from_path(paths):
     blob = gh.git_data.blobs.get(sha)
     return blob.content.decode(encoding=blob.encoding)
 
-def get_html_content_by_path(paths):
-    return {
-        'title': paths[-1].split('.')[0],
-        'html': _md_to_html(_get_file_from_path(paths), paths),
-    }
+_HASH_HEADER_RE = re.compile(r'^( *?\n)*#(?P<header>.*?)#*(\n|$)(?P<remain>(.|\n)*)', re.MULTILINE)
+_SETEXT_HEADER_RE = re.compile(r'^( *?\n)*(?P<header>.*?)\n=+[ ]*(\n|$)(?P<remain>(.|\n)*)', re.MULTILINE)
 
+def _split_title(md):
+    r"""先頭の見出し部分を（あるなら）取り出す
+
+    >>> md = '''
+    ... # header
+    ... 
+    ... contents
+    ... '''
+    >>> _split_title(md)
+    ('header', '\ncontents\n')
+
+    >>> md = '''
+    ... header
+    ... ======
+    ... 
+    ... contents
+    ... '''
+    >>> _split_title(md)
+    ('header', '\ncontents\n')
+
+    >>> md = '''
+    ... contents
+    ... '''
+    >>> _split_title(md)
+    (None, '\ncontents\n')
+    """
+    m = _HASH_HEADER_RE.match(md)
+    if m is None:
+        m = _SETEXT_HEADER_RE.match(md)
+    if m is None:
+        return None, md
+    return m.group('header').strip(), m.group('remain')
+
+def get_html_content_by_path(paths):
+    md = _get_file_from_path(paths)
+    title, md = _split_title(md)
+    if title is None:
+        title = paths[-1].split('.')[0]
+    return {
+        'title': title,
+        'html': _md_to_html(md, paths),
+    }
 
 
 DiffType = namedtuple('DiffType', ['command', 'path'])
@@ -150,6 +189,17 @@ def get_update_contents():
         }
       }
     }
+
+    >>> files = [
+    ...     DiffType('M', 'file1.md'),
+    ...     DiffType('A', 'file2.md'),
+    ...     DiffType('M', 'dir1.md'),
+    ...     DiffType('M', 'dir1/file2.md'),
+    ...     DiffType('D', 'dir1/file3.md'),
+    ...     DiffType('M', 'UpperCaseFileIsIgnored.md'),
+    ...     DiffType('D', 'ignored.if_extension_is_not_md')]
+    >>> _diff_to_contents(files)
+    {'file1.md': {'command': 'update', 'type': 'file', 'name': 'file1', 'path': 'file1.md'}, 'dir1.md': {'command': 'update', 'type': 'file', 'name': 'dir1', 'path': 'dir1.md'}, 'dir1': {'type': 'directory', 'name': 'dir1', 'children': {'file2.md': {'command': 'update', 'type': 'file', 'name': 'file2', 'path': 'dir1/file2.md'}, 'file3.md': {'command': 'delete', 'type': 'file', 'name': 'file3', 'path': 'dir1/file3.md'}}}, 'file2.md': {'command': 'append', 'type': 'file', 'name': 'file2', 'path': 'file2.md'}, 'ignored.if_extension_is_not_md': {'command': 'delete', 'type': 'file', 'name': 'ignored', 'path': 'ignored.if_extension_is_not_md'}}
     """
     return _diff_to_contents(_git_diff())
 
@@ -169,3 +219,7 @@ def set_access_token(code):
     r = requests.post('https://github.com/login/oauth/access_token', data=data, headers=headers)
     access_token = json.loads(r.text.encode('utf-8'))['access_token']
     open('.access_token', 'w').write(access_token)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
