@@ -34,7 +34,12 @@ class AttributePostprocessor(postprocessors.Postprocessor):
     def _remove_md(self, url):
         # サイト内絶対パスで末尾に .md があった場合、取り除く
         # （github のプレビューとの互換性のため）
-        return url.rstrip('.md')
+        postfix = '.md'
+        n = -1 * len(postfix)
+        if url[n:] == postfix:
+            return url[:n]
+        else:
+            return url
 
     def _to_absolute_url(self, element):
         if element.tag == 'a':
@@ -55,8 +60,8 @@ class AttributePostprocessor(postprocessors.Postprocessor):
                 element.attrib['href'] = self._remove_md(element.attrib['href'])
             else:
                 # サイト内相対パス
-                paths = base_paths
-                for p in url.split('/'):
+                paths = []
+                for p in base_paths + url.split('/'):
                     if p == '':
                         continue
                     elif p == '.':
