@@ -23,7 +23,6 @@ def _md_to_html(md_data, paths):
         qualified_fenced_code,
         'codehilite(noclasses=True)',
         html_attribute])
-    md.safeMode = 'escape'
     return md.convert(unicode(md_data, encoding='utf-8'))
 
 def _get_tree_by_path(trees, sha, path):

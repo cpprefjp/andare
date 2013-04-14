@@ -4,9 +4,37 @@ from __future__ import unicode_literals
 markdown から変換した HTML に属性を追加する
 """
 
+import re
 from markdown.util import etree
 from markdown import postprocessors
 import markdown
+
+class SafeRawHtmlPostprocessor(postprocessors.Postprocessor):
+    def run(self, text):
+        for i in range(self.markdown.htmlStash.html_counter):
+            html, safe = self.markdown.htmlStash.rawHtmlBlocks[i]
+            if not safe:
+                html = self.escape(html)
+            text = text.replace(self.markdown.htmlStash.get_placeholder(i), html)
+        return text
+
+    def escape(self, html):
+        # html tag
+        m = re.match(r'^\<\/?([a-zA-Z0-9]+)[^\>]*\>$', html)
+        if m:
+            if m.group(1) in ['code', 'span', 'b', 'div', 'br']:
+                return html
+        # html entity
+        m = re.match(r'^\&.*\;$', html)
+        if m:
+            return html
+        return self.basic_escape(html)
+
+    def basic_escape(self, html):
+        html = html.replace('&', '&amp;')
+        html = html.replace('<', '&lt;')
+        html = html.replace('>', '&gt;')
+        return html.replace('"', '&quot;')
 
 class AttributePostprocessor(postprocessors.Postprocessor):
     def __init__(self, md):
@@ -111,6 +139,7 @@ class AttributeExtension(markdown.Extension):
         attr = AttributePostprocessor(md)
         attr.config = self.getConfigs()
         md.postprocessors.add('html_attribute', attr, '_end')
+        md.postprocessors['raw_html'] = SafeRawHtmlPostprocessor(md)
 
 def makeExtension(configs):
     return AttributeExtension(configs)
