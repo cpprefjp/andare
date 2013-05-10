@@ -1,4 +1,5 @@
 #coding: utf-8
+import os
 import json
 from collections import namedtuple
 import re
@@ -44,6 +45,11 @@ def _get_file_from_path(paths):
     blob = gh.git_data.blobs.get(sha)
     return blob.content.decode(encoding=blob.encoding)
 
+def _get_file_from_path_local(paths):
+    git_checkout(settings.GIT_LOCAL_FETCHED)
+    path = os.path.join(settings.GIT_DIR, *paths)
+    return open(path).read()
+
 _HASH_HEADER_RE = re.compile(r'^( *?\n)*#(?P<header>.*?)#*(\n|$)(?P<remain>(.|\n)*)', re.MULTILINE)
 _SETEXT_HEADER_RE = re.compile(r'^( *?\n)*(?P<header>.*?)\n=+[ ]*(\n|$)(?P<remain>(.|\n)*)', re.MULTILINE)
 
@@ -81,7 +87,7 @@ def _split_title(md):
     return m.group('header').strip(), m.group('remain')
 
 def get_html_content_by_path(paths):
-    md = _get_file_from_path(paths)
+    md = _get_file_from_path_local(paths)
     title, md = _split_title(md)
     if title is None:
         title = paths[-1].split('.')[0]
@@ -206,11 +212,14 @@ def get_update_contents():
     """
     return _diff_to_contents(_git_diff())
 
-def git_fetch():
-    return subprocess.check_output(['git', 'fetch', settings.GIT_REMOTE], cwd=settings.GIT_DIR)
+def git_fetch(branch):
+    return subprocess.check_output(['git', 'fetch', branch], cwd=settings.GIT_DIR)
 
-def git_merge():
-    return subprocess.check_output(['git', 'merge', settings.GIT_REMOTE_BRANCH], cwd=settings.GIT_DIR)
+def git_checkout(branch):
+    return subprocess.check_output(['git', 'checkout', '-q', branch], cwd=settings.GIT_DIR)
+
+def git_merge(branch):
+    return subprocess.check_output(['git', 'merge', branch], cwd=settings.GIT_DIR)
 
 def set_access_token(code):
     headers = {'Accept': 'application/json'}

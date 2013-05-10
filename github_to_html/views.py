@@ -63,7 +63,10 @@ class StartView(JSONResponseMixin, View):
         return context
 
     def post(self, request, *args, **kwargs):
-        message = models.git_fetch()
+        message = models.git_fetch(settings.GIT_REMOTE)
+        print message
+        models.git_checkout(settings.GIT_LOCAL_FETCHED)
+        message = models.git_merge(settings.GIT_REMOTE_BRANCH)
         print message
         context = self.get_context_data(message=message)
         return self.render_to_response(context)
@@ -77,8 +80,11 @@ class CommitView(JSONResponseMixin, View):
         return context
 
     def post(self, request, *args, **kwargs):
-        message = models.git_merge()
+        models.git_checkout(settings.GIT_LOCAL_BRANCH)
+        message = models.git_merge(settings.GIT_LOCAL_FETCHED)
         print message
+        models.git_checkout(settings.GIT_LOCAL_FETCHED)
+
         context = self.get_context_data(message=message)
         return self.render_to_response(context)
 

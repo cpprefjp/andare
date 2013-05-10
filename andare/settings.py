@@ -160,7 +160,9 @@ LOGGING = {
     }
 }
 
+# We must create GIT_LOCAL_BRANCH and GIT_LOCAL_FETCHED branches into the site
 GIT_DIR = os.path.join(PROJECT_DIR, '..', 'cpprefjp', 'site')
 GIT_REMOTE = 'origin'
 GIT_REMOTE_BRANCH = 'origin/master'
 GIT_LOCAL_BRANCH = 'master'
+GIT_LOCAL_FETCHED = 'fetched'
