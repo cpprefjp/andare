@@ -40,7 +40,7 @@ from markdown.extensions.codehilite import CodeHilite, CodeHiliteExtension
 CODE_WRAP = '<pre><code%s>%s</code></pre>'
 LANG_TAG = ' class="%s"'
 
-QUALIFIED_FENCED_BLOCK_RE = re.compile(r'(?P<fence>`{3,})[ ]*(?P<lang>[a-zA-Z0-9_+-]*)[ ]*\n(?P<code>.*?)(?<=\n)(?P=fence)[ ]*\n(\n|(?P<qualifies>.*?\n\n))', re.MULTILINE|re.DOTALL)
+QUALIFIED_FENCED_BLOCK_RE = re.compile(r'(?P<fence>`{3,})[ ]*(?P<lang>[a-zA-Z0-9_+-]*)[ ]*\n(?P<code>.*?)(?<=\n)\s*(?P=fence)[ ]*\n(\n|(?P<qualifies>.*?\n\s*\n))', re.MULTILINE|re.DOTALL)
 QUALIFY_RE = re.compile(r'^\* +(?P<target>.*?)(?P<commands>(\[.*?\])*)$')
 QUALIFY_COMMAND_RE = re.compile(r'\[(.*?)\]')
 
@@ -124,10 +124,10 @@ class QualifierList(object):
 
         # 置換対象になる単語を正規表現で表す
         def get_target_re(target):
-            return '((?<=[^a-zA-Z_])|(^)){target}((?=[^a-zA-Z_])|($))'.format(
+            return '((?<=[^a-zA-Z_])|(?:^)){target}((?=[^a-zA-Z_])|(?:$))'.format(
                 target=re.escape(target)
             )
-        target_re_text = '|'.join('({})'.format(get_target_re(q.target)) for q in self._qs)
+        target_re_text = '|'.join('(?:{})'.format(get_target_re(q.target)) for q in self._qs)
 
         # 対象となる単語を置換し、その置換された文字列を後で辿るための正規表現（text_re_list）と、
         # 置換された文字列に対してどのような修飾を行えばいいかという辞書（match_qualifier）を作る。
@@ -147,7 +147,7 @@ class QualifierList(object):
                 original=text,
             )
             # 置換された text だけを確実に検索するための正規表現
-            text_re = '({match_name} (?P<{match_name}>.*?)( {match_name}))'.format(
+            text_re = '(?:{match_name} (?P<{match_name}>.*?)(?: {match_name}))'.format(
                 match_name=match_name
             )
             text_re_list.append(text_re)
