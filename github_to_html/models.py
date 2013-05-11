@@ -240,9 +240,14 @@ def resolve_errors():
     for issue in issues.all():
         if title == issue.title:
             # 自動で閉じる
+            body = (
+                '\n\n'
+                '---- Closed by andare ----\n'
+                '修正が確認されたので Close します。'
+            )
             gh.issues.update(issue.number, {
                 'state': 'close',
-                'body': issue.body + '\n\n---- Closed by andare ----',
+                'body': issue.body + body,
             })
             break
 
@@ -250,7 +255,7 @@ def register_errors(errors):
     commit_id = get_commit_id(settings.GIT_LOCAL_BRANCH)
     title = TITLE_FORMAT.format(commit_id=commit_id)
 
-    urls = ['md: [/{error}](/cpprefjp/site/blob/mastera/{error}), [check_site](http://melpon.org/andare/view/{error})'.format(error=error) for error in errors]
+    urls = ['| [/{error}](/cpprefjp/site/blob/master/{error}) | [check_site](http://melpon.org/andare/view/{error}) |'.format(error=error) for error in errors]
 
     access_token = open('.access_token').read()
     gh = Github(user=TARGET_GITHUB_USER, repo=TARGET_GITHUB_REPO, token=access_token)
@@ -258,7 +263,13 @@ def register_errors(errors):
     for issue in issues.all():
         if title == issue.title:
             # 更新する
-            body = '\n\n---- Updated At {date} ----\n'.format(date=datetime.datetime.now())
+            body = (
+                '\n\n'
+                '---- Updated At {date} ----\n'
+                'まだ修正されていないファイルがあります。\n'
+                '|ファイル|チェックサイト|\n'
+                '|--------|--------------|\n'
+            ).format(date=datetime.datetime.now())
             body += '\n'.join(urls)
             gh.issues.update(issue.number, {
                 'title': issue.title,
@@ -266,7 +277,15 @@ def register_errors(errors):
             })
             break
     else:
-        body = '\n'.join(urls)
+        body = (
+            '自動更新に失敗しました。\n'
+            '\n'
+            '以下の『ファイル』を更新し、『チェックサイト』のページを開いてもエラーが出ないことを確認して下さい。\n'
+            '\n'
+            '|ファイル|チェックサイト|\n'
+            '|--------|--------------|\n'
+        )
+        body += '\n'.join(urls)
         # 新規作成
         gh.issues.create({
             'title': title,
