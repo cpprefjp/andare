@@ -7,5 +7,6 @@ urlpatterns = patterns('',
     url(r'^/contents$', views.ContentsView.as_view()),
     url(r'^/start$', views.StartView.as_view()),
     url(r'^/commit$', views.CommitView.as_view()),
+    url(r'^/errors$', views.ErrorView.as_view()),
     url(r'^/oauth$', views.OAuthView.as_view()),
 )

@@ -1,6 +1,7 @@
 #coding: utf-8
 import os
 import json
+import datetime
 from collections import namedtuple
 import re
 import subprocess
@@ -11,6 +12,8 @@ from pygithub3.core.client import Client
 import markdown
 
 BASE_URL = 'https://sites.google.com/site/cpprefjpdummy'
+TARGET_GITHUB_USER = 'cpprefjp'
+TARGET_GITHUB_REPO = 'site'
 
 def _md_to_html(md_data, paths):
     qualified_fenced_code = 'github_to_html.qualified_fenced_code'
@@ -34,7 +37,7 @@ def _get_tree_by_path(trees, sha, path):
 
 def _get_file_from_path(paths):
     access_token = open('.access_token').read()
-    gh = Github(user='cpprefjp', repo='site', token=access_token)
+    gh = Github(user=TARGET_GITHUB_USER, repo=TARGET_GITHUB_REPO, token=access_token)
 
     sha = 'HEAD'
     for path in paths:
@@ -220,6 +223,39 @@ def git_checkout(branch):
 
 def git_merge(branch):
     return subprocess.check_output(['git', 'merge', branch], cwd=settings.GIT_DIR)
+
+def get_commit_id(branch):
+    git_checkout(branch)
+    return subprocess.check_output(['git', 'log', '-1', 'HEAD', '--pretty=format:%H'], cwd=settings.GIT_DIR)
+
+def register_errors(errors):
+    TITLE_FORMAT = 'Update Error: {commit_id}'
+
+    commit_id = get_commit_id(settings.GIT_LOCAL_BRANCH)
+    title = TITLE_FORMAT.format(commit_id=commit_id)
+
+    urls = ['[{error}](http://melpon.org/andare/view/{error})'.format(error=error) for error in errors]
+
+    access_token = open('.access_token').read()
+    gh = Github(user=TARGET_GITHUB_USER, repo=TARGET_GITHUB_REPO, token=access_token)
+    issues = gh.issues.list_by_repo(milestone=None, assignee=None)
+    for issue in issues.all():
+        if title == issue.title:
+            # 更新する
+            body = '\n\n---- Updated At {date} ----\n'.format(date=datetime.datetime.now())
+            body += '\n'.join(urls)
+            gh.issues.update(issue.number, {
+                'title': issue.title,
+                'body': issue.body + body,
+            })
+            break
+    else:
+        body = '\n'.join(urls)
+        # 新規作成
+        gh.issues.create({
+            'title': title,
+            'body': body,
+        })
 
 def set_access_token(code):
     headers = {'Accept': 'application/json'}

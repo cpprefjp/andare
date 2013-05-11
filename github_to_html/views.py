@@ -1,8 +1,15 @@
 #coding: utf-8
 import json
+from django.conf import settings
 from django.views.generic.base import View, TemplateView
 from django.http import HttpResponse, HttpResponseRedirect
 from github_to_html import models
+
+class EchoMixin(object):
+    def echo(self, message):
+        import sys
+        print>>sys.stdout, message
+        sys.stdout.flush()
 
 class JSONResponseMixin(object):
     """
@@ -54,7 +61,7 @@ class ContentsView(JSONResponseMixin, TemplateView):
         }
         return context
 
-class StartView(JSONResponseMixin, View):
+class StartView(EchoMixin, JSONResponseMixin, View):
     def get_context_data(self, **kwargs):
         context = {
             "success": True,
@@ -64,14 +71,14 @@ class StartView(JSONResponseMixin, View):
 
     def post(self, request, *args, **kwargs):
         message = models.git_fetch(settings.GIT_REMOTE)
-        print message
+        self.echo(message)
         models.git_checkout(settings.GIT_LOCAL_FETCHED)
         message = models.git_merge(settings.GIT_REMOTE_BRANCH)
-        print message
+        self.echo(message)
         context = self.get_context_data(message=message)
         return self.render_to_response(context)
 
-class CommitView(JSONResponseMixin, View):
+class CommitView(EchoMixin, JSONResponseMixin, View):
     def get_context_data(self, **kwargs):
         context = {
             "success": True,
@@ -82,14 +89,29 @@ class CommitView(JSONResponseMixin, View):
     def post(self, request, *args, **kwargs):
         models.git_checkout(settings.GIT_LOCAL_BRANCH)
         message = models.git_merge(settings.GIT_LOCAL_FETCHED)
-        print message
+        self.echo(message)
         models.git_checkout(settings.GIT_LOCAL_FETCHED)
 
         context = self.get_context_data(message=message)
         return self.render_to_response(context)
 
+class ErrorView(EchoMixin, JSONResponseMixin, View):
+    def get_context_data(self, **kwargs):
+        context = {
+            "success": True,
+        }
+        context.update(kwargs)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        errors = json.loads(request.POST.get('errors'))
+        self.echo(errors)
+        models.register_errors(errors)
+        context = self.get_context_data()
+        return self.render_to_response(context);
+
 class OAuthView(View):
-    # GET https://github.com/login/oauth/authorize?client_id=5163f9957aabe66d2ce4
+    # GET https://github.com/login/oauth/authorize?client_id=5163f9957aabe66d2ce4&scope=public_repo
     def get(self, request):
         code = request.GET.get('code')
         models.set_access_token(code)
