@@ -36,9 +36,12 @@ class JSONResponseMixin(object):
         return json.dumps(context)
 
 class GithubToHtmlMixin(object):
+    def get_html_content(self, paths):
+        return models.get_html_content_by_path(paths)
+
     def get_context_data(self, paths, **kwargs):
         paths = paths.strip('/').split('/')
-        content = models.get_html_content_by_path(paths)
+        content = self.get_html_content(paths)
         # ignore kwargs
         context = {
             'title': content['title'],
@@ -51,6 +54,10 @@ class JSONGithubToHtmlView(JSONResponseMixin, GithubToHtmlMixin, TemplateView):
 
 class HtmlGithubToHtmlView(GithubToHtmlMixin, TemplateView):
     template_name = 'github_to_html/github_to_html.html'
+
+    def get_html_content(self, paths):
+        # html 表示の場合は最新のものを取ってくる
+        return models.get_latest_html_content_by_path(paths)
 
 class ContentsView(JSONResponseMixin, TemplateView):
     def get_context_data(self, **kwargs):

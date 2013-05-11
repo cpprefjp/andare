@@ -89,8 +89,8 @@ def _split_title(md):
         return None, md
     return m.group('header').strip(), m.group('remain')
 
-def get_html_content_by_path(paths):
-    md = _get_file_from_path_local(paths)
+def _get_html_content(paths, get_file):
+    md = get_file(paths)
     title, md = _split_title(md)
     if title is None:
         title = paths[-1].split('.')[0]
@@ -98,6 +98,12 @@ def get_html_content_by_path(paths):
         'title': title,
         'html': _md_to_html(md, paths),
     }
+
+def get_latest_html_content_by_path(paths):
+    return _get_html_content(paths, _get_file_from_path)
+
+def get_html_content_by_path(paths):
+    return _get_html_content(paths, _get_file_from_path_local)
 
 
 DiffType = namedtuple('DiffType', ['command', 'path'])
