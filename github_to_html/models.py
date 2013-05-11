@@ -228,13 +228,29 @@ def get_commit_id(branch):
     git_checkout(branch)
     return subprocess.check_output(['git', 'log', '-1', 'HEAD', '--pretty=format:%H'], cwd=settings.GIT_DIR)
 
-def register_errors(errors):
-    TITLE_FORMAT = 'Update Error: {commit_id}'
+TITLE_FORMAT = 'Update Error: {commit_id}'
 
+def resolve_errors():
     commit_id = get_commit_id(settings.GIT_LOCAL_BRANCH)
     title = TITLE_FORMAT.format(commit_id=commit_id)
 
-    urls = ['[{error}](http://melpon.org/andare/view/{error})'.format(error=error) for error in errors]
+    access_token = open('.access_token').read()
+    gh = Github(user=TARGET_GITHUB_USER, repo=TARGET_GITHUB_REPO, token=access_token)
+    issues = gh.issues.list_by_repo(milestone=None, assignee=None)
+    for issue in issues.all():
+        if title == issue.title:
+            # 自動で閉じる
+            gh.issues.update(issue.number, {
+                'state': 'close',
+                'body': issue.body + '\n\n---- Closed by andare ----',
+            })
+            break
+
+def register_errors(errors):
+    commit_id = get_commit_id(settings.GIT_LOCAL_BRANCH)
+    title = TITLE_FORMAT.format(commit_id=commit_id)
+
+    urls = ['md: [/{error}](/cpprefjp/site/blob/mastera/{error}), [check_site](http://melpon.org/andare/view/{error})'.format(error=error) for error in errors]
 
     access_token = open('.access_token').read()
     gh = Github(user=TARGET_GITHUB_USER, repo=TARGET_GITHUB_REPO, token=access_token)

@@ -87,6 +87,8 @@ class CommitView(EchoMixin, JSONResponseMixin, View):
         return context
 
     def post(self, request, *args, **kwargs):
+        models.resolve_errors()
+
         models.git_checkout(settings.GIT_LOCAL_BRANCH)
         message = models.git_merge(settings.GIT_LOCAL_FETCHED)
         self.echo(message)
