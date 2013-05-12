@@ -114,8 +114,10 @@ class ErrorView(EchoMixin, JSONResponseMixin, View):
 
     def post(self, request, *args, **kwargs):
         errors = json.loads(request.POST.get('errors'))
+        next_trigger_at = request.POST.get('nexttriggerat').encode('utf-8')
         self.echo(errors)
-        models.register_errors(errors)
+        self.echo(next_trigger_at)
+        models.register_errors(errors, next_trigger_at)
         context = self.get_context_data()
         return self.render_to_response(context);
 

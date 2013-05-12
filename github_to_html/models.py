@@ -253,11 +253,11 @@ def resolve_errors():
             )
             gh.issues.update(issue.number, {
                 'state': 'close',
-                'body': issue.body + body,
+                'body': issue.body.encode('utf-8') + body,
             })
             break
 
-def register_errors(errors):
+def register_errors(errors, next_trigger_at):
     commit_id = get_commit_id(settings.GIT_LOCAL_BRANCH)
     title = TITLE_FORMAT.format(commit_id=commit_id)
 
@@ -269,17 +269,24 @@ def register_errors(errors):
     for issue in issues.all():
         if title == issue.title:
             # 更新する
-            body = (
+            body = issue.body.encode('utf-8')
+            body += (
                 '\n\n'
                 '---- Updated At {date} ----\n'
                 'まだ修正されていないファイルがあります。\n'
+                '\n'
                 '|ファイル|チェックサイト|\n'
                 '|--------|--------------|\n'
             ).format(date=datetime.datetime.now())
             body += '\n'.join(urls)
+            body += (
+                '\n\n'
+                '次の自動実行は [{datetime}] に行われます。\n'
+            ).format(datetime=next_trigger_at)
+
             gh.issues.update(issue.number, {
                 'title': issue.title,
-                'body': issue.body + body,
+                'body': body,
             })
             break
     else:
@@ -292,6 +299,10 @@ def register_errors(errors):
             '|--------|--------------|\n'
         )
         body += '\n'.join(urls)
+        body += (
+            '\n\n'
+            '次の自動実行は [{datetime}] に行われます。\n'
+        ).format(datetime=next_trigger_at)
         # 新規作成
         gh.issues.create({
             'title': title,
