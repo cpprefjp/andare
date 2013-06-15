@@ -116,7 +116,7 @@ class QualifierList(object):
         """置換対象になる単語にマーキングを施す
 
         対象文字列が 'sort' だとすれば、文字列中にある全ての 'sort' を
-        '{ランダムな文字列} sort {ランダムな文字列}'
+        '{ランダムな文字列}sort{ランダムな文字列}'
         という文字列に置換する。
         """
         if len(self._qs) == 0:
@@ -142,12 +142,12 @@ class QualifierList(object):
             match_qualifier[match_name] = q
 
             # text をこの文字列に置換する
-            text = '{match_name} {original} {match_name}'.format(
+            text = '{match_name}{original}{match_name}'.format(
                 match_name=match_name,
                 original=text,
             )
             # 置換された text だけを確実に検索するための正規表現
-            text_re = '(?:{match_name} (?P<{match_name}>.*?)(?: {match_name}))'.format(
+            text_re = '(?:{match_name}(?P<{match_name}>.*?)(?:{match_name}))'.format(
                 match_name=match_name
             )
             text_re_list.append(text_re)
