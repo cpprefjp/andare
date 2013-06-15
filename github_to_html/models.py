@@ -11,7 +11,7 @@ from pygithub3 import Github
 from pygithub3.core.client import Client
 import markdown
 
-BASE_URL = 'https://sites.google.com/site/cpprefjpdummy'
+BASE_URL = 'https://sites.google.com/site/cpprefjp'
 TARGET_GITHUB_USER = 'cpprefjp'
 TARGET_GITHUB_REPO = 'site'
 
@@ -117,6 +117,16 @@ def _git_diff():
     lines = output.split('\n')
     return [DiffType(*t.split('\t')) for t in lines]
 
+def _diff_all():
+    git_checkout(settings.GIT_LOCAL_BRANCH)
+    output = subprocess.check_output(['git', 'ls-files'], cwd=settings.GIT_DIR)
+    output = output.strip()
+    if len(output) == 0:
+        return []
+
+    paths = output.split('\n')
+    return [DiffType(command='M', path=path) for path in paths]
+
 def _diff_to_contents(diff_type_list):
     contents = { }
     def to_longname(command):
@@ -220,6 +230,9 @@ def get_update_contents():
     {'file1.md': {'command': 'update', 'type': 'file', 'name': 'file1', 'path': 'file1.md'}, 'dir1.md': {'command': 'update', 'type': 'file', 'name': 'dir1', 'path': 'dir1.md'}, 'dir1': {'type': 'directory', 'name': 'dir1', 'children': {'file2.md': {'command': 'update', 'type': 'file', 'name': 'file2', 'path': 'dir1/file2.md'}, 'file3.md': {'command': 'delete', 'type': 'file', 'name': 'file3', 'path': 'dir1/file3.md'}}}, 'file2.md': {'command': 'append', 'type': 'file', 'name': 'file2', 'path': 'file2.md'}, 'ignored.if_extension_is_not_md': {'command': 'delete', 'type': 'file', 'name': 'ignored', 'path': 'ignored.if_extension_is_not_md'}}
     """
     return _diff_to_contents(_git_diff())
+
+def get_all_contents():
+    return _diff_to_contents(_diff_all())
 
 def git_fetch(branch):
     return subprocess.check_output(['git', 'fetch', branch], cwd=settings.GIT_DIR)

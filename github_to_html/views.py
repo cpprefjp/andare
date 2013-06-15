@@ -68,6 +68,15 @@ class ContentsView(JSONResponseMixin, TemplateView):
         }
         return context
 
+class AllContentsView(JSONResponseMixin, TemplateView):
+    def get_context_data(self, **kwargs):
+        contents = models.get_all_contents()
+
+        context = {
+            "contents": contents
+        }
+        return context
+
 class StartView(EchoMixin, JSONResponseMixin, View):
     def get_context_data(self, **kwargs):
         context = {
