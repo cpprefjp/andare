@@ -21,12 +21,18 @@ def _md_to_html(md_data, paths):
         base_url=BASE_URL,
         base_path='/'.join(paths[:-1]),
     )
+    footer = 'github_to_html.footer(url={url})'.format(
+        url='https://github.com/cpprefjp/site/edit/master/{paths}'.format(
+            paths='/'.join(paths),
+        )
+    )
 
     md = markdown.Markdown([
         'tables',
         qualified_fenced_code,
         'codehilite(noclasses=True)',
-        html_attribute])
+        html_attribute,
+        footer])
     return md.convert(unicode(md_data, encoding='utf-8'))
 
 def _get_tree_by_path(trees, sha, path):
@@ -118,7 +124,7 @@ def _git_diff():
     return [DiffType(*t.split('\t')) for t in lines]
 
 def _diff_all():
-    git_checkout(settings.GIT_LOCAL_BRANCH)
+    git_checkout(settings.GIT_LOCAL_FETCHED)
     output = subprocess.check_output(['git', 'ls-files'], cwd=settings.GIT_DIR)
     output = output.strip()
     if len(output) == 0:
