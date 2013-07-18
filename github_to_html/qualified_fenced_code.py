@@ -50,7 +50,7 @@ class QualifiedFencedCodeExtension(Extension):
         fenced_block = QualifiedFencedBlockPreprocessor(md)
         md.registerExtension(self)
 
-        md.preprocessors.add('qualified_fenced_code', fenced_block, "_begin")
+        md.preprocessors.add('qualified_fenced_code', fenced_block, ">normalize_whitespace")
 
 
 def _make_random_string():
@@ -212,7 +212,7 @@ class QualifiedFencedBlockPreprocessor(Preprocessor):
                 # is enabled, so we call it to highlite the code
                 if self.codehilite_conf:
                     highliter = CodeHilite(code,
-                            linenos=self.codehilite_conf['force_linenos'][0],
+                            linenums=self.codehilite_conf['linenums'][0],
                             guess_lang=self.codehilite_conf['guess_lang'][0],
                             css_class=self.codehilite_conf['css_class'][0],
                             style=self.codehilite_conf['pygments_style'][0],
