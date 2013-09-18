@@ -22,7 +22,7 @@ class SafeRawHtmlPostprocessor(postprocessors.Postprocessor):
         # html tag
         m = re.match(r'^\<\/?([a-zA-Z0-9]+)[^\>]*\>$', html)
         if m:
-            if m.group(1) in ['code', 'span', 'b', 'div', 'br']:
+            if m.group(1) in ['code', 'span', 'b', 'div', 'br', 'sup', 'sub']:
                 return html
         # html entity
         m = re.match(r'^\&.*\;$', html)
