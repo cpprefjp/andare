@@ -4,6 +4,7 @@ from github_to_html import views
 urlpatterns = patterns('',
     url(r'^/html/(?P<paths>.*)$', views.JSONGithubToHtmlView.as_view()),
     url(r'^/view/(?P<paths>.*)$', views.HtmlGithubToHtmlView.as_view()),
+    url(r'^/local/(?P<paths>.*)$', views.HtmlLocalGithubToHtmlView.as_view()),
     url(r'^/contents$', views.ContentsView.as_view()),
     url(r'^/all_contents$', views.AllContentsView.as_view()),
     url(r'^/start$', views.StartView.as_view()),
