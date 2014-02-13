@@ -17,9 +17,10 @@ TARGET_GITHUB_REPO = 'site'
 
 def _md_to_html(md_data, paths):
     qualified_fenced_code = 'github_to_html.qualified_fenced_code'
-    html_attribute = 'github_to_html.html_attribute(base_url={base_url}, base_path={base_path})'.format(
+    html_attribute = 'github_to_html.html_attribute(base_url={base_url}, base_path={base_path}, full_path={full_path})'.format(
         base_url=BASE_URL,
         base_path='/'.join(paths[:-1]),
+        full_path='/'.join(paths),
     )
     footer = 'github_to_html.footer(url={url})'.format(
         url='https://github.com/cpprefjp/site/edit/master/{paths}'.format(

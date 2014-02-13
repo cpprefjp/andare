@@ -184,6 +184,7 @@ class AttributePostprocessor(postprocessors.Postprocessor):
         if element.tag == 'a':
             base_url = self.config['base_url'].strip('/')
             base_paths = self.config['base_path'].strip('/').split('/')
+            full_path = self.config['full_path']
 
             url = element.attrib['href']
             if url.startswith('http://') or url.startswith('https://'):
@@ -197,6 +198,9 @@ class AttributePostprocessor(postprocessors.Postprocessor):
                 # サイト内絶対パス
                 element.attrib['href'] = base_url + url
                 element.attrib['href'] = self._remove_md(element.attrib['href'])
+            elif url.startswith('#'):
+                # ページ内リンク
+                element.attrib['href'] = full_path + url
             else:
                 # サイト内相対パス
                 paths = []
@@ -240,6 +244,7 @@ class AttributeExtension(markdown.Extension):
         self.config = {
             'base_url' : [None, "Base URL used to link URL as absolute URL"],
             'base_path' : [None, "Base Path used to link URL as relative URL"],
+            'full_path' : [None, "Full Path used to link URL as anchor URL"],
         }
 
         # ユーザ設定で上書き
