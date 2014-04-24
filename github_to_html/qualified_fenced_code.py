@@ -210,7 +210,7 @@ class QualifiedFencedBlockPreprocessor(Preprocessor):
 
                 # If config is not empty, then the codehighlite extension
                 # is enabled, so we call it to highlite the code
-                if self.codehilite_conf:
+                if self.codehilite_conf and m.group('lang'):
                     highliter = CodeHilite(code,
                             linenums=self.codehilite_conf['linenums'][0],
                             guess_lang=self.codehilite_conf['guess_lang'][0],
