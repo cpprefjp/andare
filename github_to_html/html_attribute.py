@@ -200,7 +200,7 @@ class AttributePostprocessor(postprocessors.Postprocessor):
                 element.attrib['href'] = self._remove_md(element.attrib['href'])
             elif url.startswith('#'):
                 # ページ内リンク
-                element.attrib['href'] = self._remove_md(full_path) + url
+                element.attrib['href'] = base_url + '/' + self._remove_md(full_path) + url
             else:
                 # サイト内相対パス
                 paths = []
