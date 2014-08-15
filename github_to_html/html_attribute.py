@@ -173,12 +173,13 @@ class AttributePostprocessor(postprocessors.Postprocessor):
     def _remove_md(self, url):
         # サイト内絶対パスで末尾に .md があった場合、取り除く
         # （github のプレビューとの互換性のため）
-        postfix = '.md'
-        n = -1 * len(postfix)
-        if url[n:] == postfix:
-            return url[:n]
-        else:
-            return url
+        matched = re.match('([^#]*)\.md(#.*)?$', url)
+        if matched:
+            url = matched.group(1)
+            anchor = matched.group(2)
+            if anchor is not None:
+                url = url + anchor
+        return url
 
     def _to_absolute_url(self, element):
         if element.tag == 'a':
