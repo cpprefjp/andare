@@ -182,7 +182,7 @@ class AttributePostprocessor(postprocessors.Postprocessor):
         return url
 
     def _to_absolute_url(self, element):
-        if element.tag == 'a':
+        if element.tag == 'a' and element.attrib.has_key('href'):
             base_url = self.config['base_url'].strip('/')
             base_paths = self.config['base_path'].strip('/').split('/')
             full_path = self.config['full_path']
