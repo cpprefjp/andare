@@ -173,15 +173,16 @@ class AttributePostprocessor(postprocessors.Postprocessor):
     def _remove_md(self, url):
         # サイト内絶対パスで末尾に .md があった場合、取り除く
         # （github のプレビューとの互換性のため）
-        postfix = '.md'
-        n = -1 * len(postfix)
-        if url[n:] == postfix:
-            return url[:n]
-        else:
-            return url
+        matched = re.match('([^#]*)\.md(#.*)?$', url)
+        if matched:
+            url = matched.group(1)
+            anchor = matched.group(2)
+            if anchor is not None:
+                url = url + anchor
+        return url
 
     def _to_absolute_url(self, element):
-        if element.tag == 'a':
+        if element.tag == 'a' and element.attrib.has_key('href'):
             base_url = self.config['base_url'].strip('/')
             base_paths = self.config['base_path'].strip('/').split('/')
             full_path = self.config['full_path']
@@ -200,7 +201,7 @@ class AttributePostprocessor(postprocessors.Postprocessor):
                 element.attrib['href'] = self._remove_md(element.attrib['href'])
             elif url.startswith('#'):
                 # ページ内リンク
-                element.attrib['href'] = self._remove_md(full_path) + url
+                element.attrib['href'] = base_url + '/' + self._remove_md(full_path) + url
             else:
                 # サイト内相対パス
                 paths = []
