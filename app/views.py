@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.views.generic.base import View, TemplateView
 from django.http import HttpResponse, HttpResponseRedirect
-from github_to_html import models
+from app import models
 
 class EchoMixin(object):
     def echo(self, message):

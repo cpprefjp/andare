@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, include, url
-from github_to_html import views
+from app import views
 
 urlpatterns = patterns('',
     url(r'^/html/(?P<paths>.*)$', views.JSONGithubToHtmlView.as_view()),

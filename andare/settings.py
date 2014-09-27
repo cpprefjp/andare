@@ -128,7 +128,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'github_to_html',
+    'app',
 )
 
 # A sample logging configuration. The only tangible logging
