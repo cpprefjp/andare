@@ -53,10 +53,10 @@ class JSONGithubToHtmlView(JSONResponseMixin, GithubToHtmlMixin, TemplateView):
     pass
 
 class HtmlLocalGithubToHtmlView(GithubToHtmlMixin, TemplateView):
-    template_name = 'github_to_html/github_to_html.html'
+    template_name = 'app/markdown_to_html.html'
 
 class HtmlGithubToHtmlView(GithubToHtmlMixin, TemplateView):
-    template_name = 'github_to_html/github_to_html.html'
+    template_name = 'app/markdown_to_html.html'
 
     def get_html_content(self, paths):
         # html 表示の場合は最新のものを取ってくる
